@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="GBK"?>
+<project name="DataLoad" basedir="." default="">
+     <property name="src" value="src"/>
+     <property name="dest" value="bin"/>
+     <property name="jarname" value="DataLoad.jar"/>
+     <property name="output.dir" value="output"/>
+     <property name="lib.dir" value="lib"/>
+     <path id="classpath">
+          <fileset dir="${lib.dir}">
+               <include name="**/*.jar"/>
+          </fileset>
+          <pathelement path="${dest}"/>
+     </path>
+    
+     <!-- 第三方jar包的路径 --> 
+          <path id="lib-classpath"> 
+              <fileset dir="${lib.dir}"> 
+                  <include name="**/*.jar"/> 
+              </fileset> 
+         </path> 
+
+
+     <target name="compile" description="Compile all source code">
+          <delete dir="${dest}"/>
+          <mkdir dir="${dest}"/>
+          <!-- <copy todir="${dest}">
+               <fileset dir="${src}">
+                    <exclude name="**/*.java"/>
+               </fileset>         
+          </copy> -->
+          <javac destdir="${dest}" debug="true" includeantruntime="yes"
+               deprecation="false" optimize="false" failonerror="true">
+               <src path="${src}"/>
+               <classpath refid="classpath"/>
+          </javac>
+     </target>
+     
+     <target name="run" description="Run the main class" depends="compile">
+          <java classname="com.unicss.db.Main" fork="yes" failonerror="true">
+               <classpath refid="classpath"/>
+          </java>
+     </target>
+     
+     <target name="jar" depends="compile">
+          <mkdir dir="${output.dir}/lib" />
+          <copy todir="${output.dir}/lib">
+               <fileset dir="${lib.dir}">
+               </fileset>                             
+          </copy>
+          <!--Create a property containing all .jar files, 
+              prefix lib/, and seperated with a space--> 
+              <pathconvert property="mf.classpath" pathsep=" "> 
+                  <mapper> 
+                      <chainedmapper> 
+                          <!-- jar包文件只留文件名，去掉目录信息 --> 
+                          <flattenmapper/>
+                          <!-- add lib/ prefix --> 
+                          <globmapper from="*" to="lib/*"/> 
+                      </chainedmapper> 
+                  </mapper> 
+                 <path refid="lib-classpath"/> 
+               </pathconvert> 
+          <jar destfile="${output.dir}/${jarname}" basedir="${dest}" >
+          <manifest>
+               <attribute name="Main-class" value="com.unicss.db.Main"/>
+               <attribute name="Class-Path" value="${mf.classpath}"/>
+          </manifest>
+          </jar>
+     </target >
+
+     <target name="clean"> 
+              <!-- 可以以递归的方式删除目录 --> 
+              <delete dir="${output.dir}" /> 
+          </target>
+</project>
