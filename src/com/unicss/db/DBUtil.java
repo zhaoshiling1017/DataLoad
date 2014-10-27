@@ -12,6 +12,8 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.unicss.ssh2.SSH2Conn;
+
 
 /**
  * @author lenzhao 
@@ -19,7 +21,7 @@ import org.apache.commons.lang.StringUtils;
  * @date  2014-10-24 上午10:00:06
  */
 public class DBUtil {
-	public static void execute(DataSource ds,String schema,String path){
+	public static void execute(DataSource ds,String schema,String path,SSH2Conn ssh2){
 		//判断文件夹路径是否已斜杠结尾
 		if (null != path && !path.endsWith("/")) {
 			path = path + "/";
@@ -27,9 +29,9 @@ public class DBUtil {
 		//清除指定文件夹下csv文件
 		checkFileExist(path);
 		//操作用户组表
-		opGroupTable(ds,schema,path);
+		opGroupTable(ds,schema,path,ssh2);
 		//操作用户表
-		opUserTable(ds,schema,path);
+		opUserTable(ds,schema,path,ssh2);
 		//关联用户组表和用户表
 		linkUserAndGroup(ds,schema);
 		//操作项目表
@@ -45,7 +47,7 @@ public class DBUtil {
 			//判断是否存在指定的表,如果不存在创建一张表
 			checkTableExist(ds,schema,pgTableName,"cc_call_record");
 			//操作话单表
-			opCallRecordTable(ds,schema,tableName,pgTableName);
+			opCallRecordTable(ds,schema,tableName,pgTableName, path,ssh2);
 		}
 	}
 	//获取表名
@@ -146,7 +148,7 @@ public class DBUtil {
 		}
 	}
 	//操作话单表
-	public static void opCallRecordTable(DataSource ds,String schema,String mySqlTableName,String pgTableName) {
+	public static void opCallRecordTable(DataSource ds,String schema,String mySqlTableName,String pgTableName,String path,SSH2Conn ssh2) {
 		Connection conn1 = null;
 		Connection conn2 = null;
 		Statement stmt1 = null;
@@ -166,34 +168,40 @@ public class DBUtil {
 			}
 			String sql1 = "select ani,dnis, begin_at, connect_at,end_at,IF(agent_dn,agent_dn,null)," +
 					"IF(agent_jobcode,agent_jobcode,null), agent_connect_at,record_file_name,direction,transfer_agent_at,call_id," +
-					"call_type,IF(tag,tag,null),created_at from "+mySqlTableName +" order by id into outfile 'g:/sql/"+mySqlTableName+".csv' fields terminated by ',' lines terminated by '\r\n';" ;
+					"call_type,IF(tag,tag,null),created_at from "+mySqlTableName +" order by id into outfile '"+path+mySqlTableName+".csv' fields terminated by ',' lines terminated by '\r\n';" ;
 			stmt1.execute(sql1);
 			String sql2 = "copy "+schema+"."+pgTableName+"(ani,dnis,begin_at,connect_at,end_at,device_no,agent_job_code,agent_connect_at,file_path,call_direction,transfer_agent_at,call_id,call_type," +
-					"tag,created_at) from 'g:/sql/"+mySqlTableName+".csv' delimiter as ',';";
+					"tag,created_at) from '"+path+mySqlTableName+".csv' delimiter as ',';";
+			String cmd = "scp root@"+ds.getMysqlHost()+":"+path+mySqlTableName+".csv "+path;
 			stmt2 = conn2.createStatement();
-			stmt2.execute(sql2);
-			String sql3 = "select id from "+schema+"."+pgTableName+" order by id desc limit 1";
-			int id = 0;
-			rs2 = stmt2.executeQuery(sql3);
-			while (rs2.next()) {
-				id = rs2.getInt(1);
-			}
-			String sql4 = "select (select p.name from projects p where p.id=project_id),(select ug.name from user_group ug where ug.id=(select u.user_group_id from  users u where u.jobcode=agent_jobcode )),agent_connect_at  from "+mySqlTableName +" order by id";
-			rs3 = stmt1.executeQuery(sql4);
-			int i = id-count;
-			while (rs3.next()) {
-				i++;
-				String projectName = rs3.getString(1);
-				String groupName = rs3.getString(2);
-				Date agentConnectAt = rs3.getDate(3);
-				String sql5 = "";
-				if (null != agentConnectAt) {
-					sql5 = "update "+schema+"."+pgTableName+" set project_id=(select p.id from "+schema+".cc_project p where p.name='"+projectName+"' limit 1),group_id=(select g.id from "+schema+".cc_group g where g.name='"+groupName+"' limit 1),if_connected=1 where id="+i;
-				} else {
-					sql5 = "update "+schema+"."+pgTableName+" set project_id=(select p.id from "+schema+".cc_project p where p.name='"+projectName+"' limit 1),group_id=(select g.id from "+schema+".cc_group g where g.name='"+groupName+"' limit 1),if_connected=0 where id="+i;
+			boolean isSuc = ssh2.executeCmd(cmd);
+			if (isSuc) {
+				stmt2.execute(sql2);
+				String sql3 = "select id from "+schema+"."+pgTableName+" order by id desc limit 1";
+				int id = 0;
+				rs2 = stmt2.executeQuery(sql3);
+				while (rs2.next()) {
+					id = rs2.getInt(1);
 				}
-				 
-				stmt2.execute(sql5);
+				String sql4 = "select (select p.name from projects p where p.id=project_id),(select ug.name from user_group ug where ug.id=(select u.user_group_id from  users u where u.jobcode=agent_jobcode )),agent_connect_at  from "+mySqlTableName +" order by id";
+				rs3 = stmt1.executeQuery(sql4);
+				int i = id-count;
+				while (rs3.next()) {
+					i++;
+					String projectName = rs3.getString(1);
+					String groupName = rs3.getString(2);
+					Date agentConnectAt = rs3.getDate(3);
+					String sql5 = "";
+					if (null != agentConnectAt) {
+						sql5 = "update "+schema+"."+pgTableName+" set project_id=(select p.id from "+schema+".cc_project p where p.name='"+projectName+"' limit 1),group_id=(select g.id from "+schema+".cc_group g where g.name='"+groupName+"' limit 1),if_connected=1 where id="+i;
+					} else {
+						sql5 = "update "+schema+"."+pgTableName+" set project_id=(select p.id from "+schema+".cc_project p where p.name='"+projectName+"' limit 1),group_id=(select g.id from "+schema+".cc_group g where g.name='"+groupName+"' limit 1),if_connected=0 where id="+i;
+					}
+					 
+					stmt2.execute(sql5);
+				}
+			}else{
+				System.err.println("操作话单表,csv文件拷贝失败");
 			}
 			
 		} catch (Exception e) {
@@ -408,7 +416,7 @@ public class DBUtil {
 		}
 	}
 	//操作用户表
-	public static void opUserTable(DataSource ds,String schema,String path) {
+	public static void opUserTable(DataSource ds,String schema,String path,SSH2Conn ssh2) {
 		Connection conn1 = null;
 		Connection conn2 = null;
 		try {
@@ -417,7 +425,13 @@ public class DBUtil {
 			String sql1 = "select nickname,name,jobcode,did,created_at,0,1,0 from users into outfile '"+path+"users.csv' fields terminated by ',' lines terminated by '\r\n';";
 			String sql2 = "copy "+schema+".cc_user(user_name,name,staff_no,phone,created_at,if_verify,if_use,if_system) from '"+path+"users.csv' delimiter as ',' ;";
 			executeCsv(conn1,sql1);
-			executeCsv(conn2,sql2);
+			String cmd = "scp root@"+ds.getMysqlHost()+":"+path+"users.csv "+path;
+			boolean isSuc = ssh2.executeCmd(cmd);
+			if (isSuc) {
+				executeCsv(conn2,sql2);
+			}else{
+				System.err.println("操作用户表,csv文件拷贝失败");
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -438,7 +452,7 @@ public class DBUtil {
 		}
 	}
 	//操作用户组表
-	public static void opGroupTable(DataSource ds,String schema,String path) {
+	public static void opGroupTable(DataSource ds,String schema,String path,SSH2Conn ssh2) {
 		Connection conn1 = null;
 		Connection conn2 = null;
 		try {
@@ -447,7 +461,13 @@ public class DBUtil {
 			String sql1 = "select name,created_at,updated_at,status from user_group into outfile '"+path+"user_group.csv' fields terminated by ',' lines terminated by '\r\n';";
 			String sql2 = "copy "+schema+".cc_group (name,created_at,updated_at,status) from '"+path+"user_group.csv' delimiter as ',';";
 			executeCsv(conn1,sql1);
-			executeCsv(conn2,sql2);
+			String cmd = "scp root@"+ds.getMysqlHost()+":"+path+"user_group.csv "+path;
+			boolean isSuc = ssh2.executeCmd(cmd);
+			if (isSuc) {
+				executeCsv(conn2,sql2);
+			}else{
+				System.err.println("操作用户组表,csv文件拷贝失败");
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {

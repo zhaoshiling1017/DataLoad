@@ -63,6 +63,8 @@ public class DataSource {
 		this.pgPwd = pgPwd;
 	}
 	public DataSource(String mysqlUname,String mysqlPwd,String pgUname,String pgPwd) {
+		this.mysqlHost = "localhost";
+		this.pgHost = "localhost";
 		this.mysqlUname = mysqlUname;
 		this.mysqlPwd = mysqlPwd;
 		this.pgUname = pgUname;
@@ -71,10 +73,6 @@ public class DataSource {
 	//获取mysql连接
 	public Connection getMysqlConn() throws Exception {
 		Connection conn = null;
-		if(StringUtils.isBlank(this.mysqlHost)){
-			this.mysqlHost = "localhost";
-		}
-		
 		Class.forName("com.mysql.jdbc.Driver");
         conn = DriverManager.getConnection("jdbc:mysql://"+this.mysqlHost+":3306/honeycomb",this.mysqlUname,this.mysqlPwd);
 		return conn;
@@ -82,9 +80,6 @@ public class DataSource {
 	//获取postgres连接
 	public Connection getPostgresConn() throws Exception {
 		Connection conn = null;
-		if (StringUtils.isBlank(this.pgHost)) {
-			this.pgHost = "localhost";
-		}
 		Class.forName("org.postgresql.Driver");
 	    conn = DriverManager.getConnection("jdbc:postgresql://"+this.pgHost+":5432/cc_base",this.pgUname,this.pgPwd);
 		return conn;
