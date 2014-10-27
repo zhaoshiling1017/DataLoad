@@ -31,6 +31,8 @@ public class Main {
 		}else{
 			flag = false;
 		}
+		//DBUtil.dropSequences(ds,"cc_call_record","em_101101101");
+		
 		if(flag){
 			DBUtil.execute(ds, schema, path);
 		}else{

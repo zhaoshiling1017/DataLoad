@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import org.apache.commons.lang.StringUtils;
 
 
@@ -114,12 +115,14 @@ public class DBUtil {
 					String sql5 = "alter table "+schema+"."+newTable+" alter column id set default nextval('"+schema+"."+newTable+"_id_seq');";
 					String sql6 = " ALTER TABLE "+schema+"."+newTable+" ALTER COLUMN dnis TYPE varchar(255);";
 					String sql7 = "ALTER TABLE "+schema+"."+newTable+" OWNER TO "+schema+";";
+					String sql8 = "alter sequence "+schema+"."+newTable+"_id_seq owner to "+schema+";";
 					stmt.execute(sql2);
 					stmt.execute(sql3);
 					stmt.execute(sql4);
 					stmt.execute(sql5);
 					stmt.execute(sql6);
 					stmt.execute(sql7);
+					stmt.execute(sql8);
 				}
 				break;
 			}
@@ -249,7 +252,7 @@ public class DBUtil {
 				String nickname = rs1.getString(8);
 				int cps = rs1.getInt(9);
 				if (StringUtils.isNotBlank(name)) {
-					String sql3 = "insert into "+schema+".CC_PROJECT_PARAMS(project_id,phones,ratio,if_play_voice,if_transfer,created_at,operator_id,updated_at,answer_type,call_type,call_speed,if_continue,ring_time_out,concurrent_num) values((select p.id from "+schema+".CC_PROJECT p where p.name='"+name+"' limit 1),'"+displayNums+"',1,0,1,'"+createdAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"')," +
+					String sql3 = "insert into "+schema+".CC_PROJECT_PARAMS(project_id,phones,ratio,if_play_voice,if_transfer,created_at,operator_id,updated_at,answer_type,call_type,call_speed,if_continue,ring_time_out,concurrent_num) values((select p.id from "+schema+".CC_PROJECT p where p.name='"+name+"' limit 1),'"+displayNums+"',1,0,1,'"+createdAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1)," +
 							"'"+updatedAt+"'::timestamp,'connect','capacity',"+cps+",1,20,1)";
 					stmt2 = conn2.createStatement();
 					stmt2.execute(sql3);
@@ -311,7 +314,7 @@ public class DBUtil {
 				//System.out.println("name:"+name+",createdAt:"+createdAt);
 				if (StringUtils.isNotBlank(name)) {
 					String sql2 = "insert into "+schema+".CC_PROJECT(name,type,administrator,if_reply,created_at,creator_id,updated_at,operator_id,status,first_start_time,last_start_time) values('"+name+"','"+mode+"'," +
-							"(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"'),"+0+",'"+createdAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"'),'"+updatedAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name = '"+nickname+"'),'"+status+"','"+createdAt+"'::timestamp,now()::timestamp)";
+							"(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1),"+0+",'"+createdAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1),'"+updatedAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name = '"+nickname+"' limit 1),'"+status+"','"+createdAt+"'::timestamp,now()::timestamp)";
 					stmt2 = conn2.createStatement();
 					stmt2.execute(sql2);
 				}
@@ -481,5 +484,49 @@ public class DBUtil {
 				}
 			}
 		}
-	}	
+	}
+	public static void dropTables(DataSource ds,String tableName,String schema) {
+		Connection conn = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			conn = ds.getPostgresConn();
+			String sql = "select table_name  from information_schema.tables where table_schema='"+schema+"' and table_type='BASE TABLE' and table_name like '"+tableName+"_%';";
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				String tname = rs.getString(1);
+				String sql2 = "drop table "+schema+"."+tname;
+				stmt.execute(sql2);
+				rs = stmt.executeQuery(sql);
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			
+			
+		}
+	}
+	public static void dropSequences(DataSource ds,String seqName,String schema) {
+		Connection conn = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			conn = ds.getPostgresConn();
+			String sql = "select sequence_name from information_schema.SEQUENCEs  where sequence_schema = '"+schema+"' and sequence_name like '"+seqName+"_%' and sequence_name <> 'cc_call_record_id_seq'";
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				String tname = rs.getString(1);
+				String sql2 = "drop SEQUENCE "+schema+"."+tname;
+				stmt.execute(sql2);
+				rs = stmt.executeQuery(sql);
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			
+			
+		}
+	}
 }
