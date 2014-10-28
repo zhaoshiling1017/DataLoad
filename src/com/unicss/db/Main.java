@@ -9,7 +9,7 @@ import com.unicss.ssh2.SSH2Conn;
  */
 public class Main {
 	public static void main(String[] args) {
-		/*DataSource ds = null;
+		DataSource ds = null;
 		String schema = "";
 		String path = "";
 		SSH2Conn ssh2 = null;
@@ -40,17 +40,13 @@ public class Main {
 			ssh2 = new SSH2Conn(username, pwd);
 		}else{
 			flag = false;
-		}*/
+		}
 		//DBUtil.dropSequences(ds,"cc_call_record","em_101101101");
 		
-		/*if(flag){
+		if(flag){
 			DBUtil.execute(ds, schema, path,ssh2);
 		}else{
 			System.out.println("params set error. example: [mysqlHost] mysqlUname mysqlPwd [pgHost] pgUname pgPwd schema filePath username password");
-		}*/
-		SSH2Conn ssh2 = new SSH2Conn("192.168.1.231", "root", "bjiamcall");
-		String cmd = "scp root@192.168.1.229:/tmp/test.csv /tmp/";
-		boolean isSuc = ssh2.executeCmd(cmd);
-		System.out.println(isSuc);
+		}
 	}	
 }
