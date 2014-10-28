@@ -262,7 +262,7 @@ public class DBUtil {
 			stmt1 = conn1.createStatement();
 			stmt2 = conn2.createStatement();
 			rs1 = stmt1.executeQuery(sql1);
-			String sql4 = "select id from "+schema+".cc_user where nickname='admin' limit 1";
+			String sql4 = "select id from "+schema+".cc_user where user_name='admin' limit 1";
 			rs2 = stmt2.executeQuery(sql4);
 			long uId = 0;
 			while(rs2.next()){
@@ -331,7 +331,7 @@ public class DBUtil {
 			stmt2 = conn2.createStatement();
 			String sql1 = "select p.name,p.mode,p.status,(select g.name from user_groups g where g.id=p.user_group_id) as group_name,date_format(created_at,'%Y-%m-%d %H:%i:%s') created_at,date_format(updated_at,'%Y-%m-%d %H:%i:%s') updated_at,p.display_numbers, (select u.nickname from users u where u.id=p.owner_id) nickname,p.cps from projects p";
 			rs1 = stmt1.executeQuery(sql1);
-			String sql3 = "select id from "+schema+".cc_user where nickname='admin' limit 1";
+			String sql3 = "select id from "+schema+".cc_user where user_name='admin' limit 1";
 			rs2 = stmt2.executeQuery(sql3);
 			long uId = 0;
 			while(rs2.next()){
@@ -467,7 +467,7 @@ public class DBUtil {
 					stmt2.execute(sql2);
 				}
 			}
-			String sql3 = "select id from "+schema+".cc_user where nickname='admin' limit 1";
+			String sql3 = "select id from "+schema+".cc_user where user_name='admin' limit 1";
 			rs2 = stmt2.executeQuery(sql3);
 			long uId = 0;
 			while(rs2.next()){
