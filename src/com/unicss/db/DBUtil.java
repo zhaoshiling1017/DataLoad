@@ -370,7 +370,7 @@ public class DBUtil {
 		try {
 			conn1 = ds.getMysqlConn();
 			conn2 = ds.getPostgresConn();
-			String sql1 = "select a.nickname,b.name from users a ,user_group b  where a.user_group_id = b.id";
+			String sql1 = "select a.nickname,b.name from users a ,user_groups b  where a.user_group_id = b.id";
 			stmt1 = conn1.createStatement();
 			rs1 = stmt1.executeQuery(sql1);
 			while (rs1.next()) {
@@ -458,10 +458,10 @@ public class DBUtil {
 		try {
 			conn1 = ds.getMysqlConn();
 			conn2 = ds.getPostgresConn();
-			String sql1 = "select name,created_at,updated_at,status from user_group into outfile '"+path+"user_group.csv' fields terminated by ',' lines terminated by '\r\n';";
-			String sql2 = "copy "+schema+".cc_group (name,created_at,updated_at,status) from '"+path+"user_group.csv' delimiter as ',';";
+			String sql1 = "select name,created_at,updated_at,status from user_groups into outfile '"+path+"user_groups.csv' fields terminated by ',' lines terminated by '\r\n';";
+			String sql2 = "copy "+schema+".cc_group (name,created_at,updated_at,status) from '"+path+"user_groups.csv' delimiter as ',';";
 			executeCsv(conn1,sql1);
-			String cmd = "scp root@"+ds.getMysqlHost()+":"+path+"user_group.csv "+path;
+			String cmd = "scp root@"+ds.getMysqlHost()+":"+path+"user_groups.csv "+path;
 			boolean isSuc = ssh2.executeCmd(cmd);
 			if (isSuc) {
 				executeCsv(conn2,sql2);
