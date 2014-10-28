@@ -177,39 +177,39 @@ public class DBUtil {
 			stmt1.execute(sql1);
 			String sql2 = "copy "+schema+"."+pgTableName+"(id,ani,dnis,begin_at,connect_at,end_at,device_no,agent_job_code,agent_connect_at,file_path,call_direction,transfer_agent_at,call_id,call_type," +
 					"tag,created_at) from '"+path+mySqlTableName+".csv' delimiter as ',';";
-			String cmd = "scp root@"+ds.getMysqlHost()+":"+path+mySqlTableName+".csv "+path;
+			//String cmd = "scp root@"+ds.getMysqlHost()+":"+path+mySqlTableName+".csv "+path;
 			stmt2 = conn2.createStatement();
-			boolean isSuc = ssh2.executeCmd(cmd);
-			Thread.sleep(10*1000);
-			if (isSuc) {
-				stmt2.execute(sql2);
-				String sql3 = "select id from "+schema+"."+pgTableName+" order by id desc limit 1";
-				int id = 0;
-				rs2 = stmt2.executeQuery(sql3);
-				while (rs2.next()) {
-					id = rs2.getInt(1);
-				}
-				String sql4 = "select (select p.name from projects p where p.id=project_id),(select ug.name from user_groups ug where ug.id=(select u.user_group_id from  users u where u.jobcode=agent_jobcode )),agent_connect_at  from "+mySqlTableName +" order by id";
-				rs3 = stmt1.executeQuery(sql4);
-				int i = id-count;
-				while (rs3.next()) {
-					i++;
-					String projectName = rs3.getString(1);
-					String groupName = rs3.getString(2);
-					Date agentConnectAt = rs3.getDate(3);
-					String sql5 = "";
-					if (null != agentConnectAt) {
-						sql5 = "update "+schema+"."+pgTableName+" set project_id=(select p.id from "+schema+".cc_project p where p.name='"+projectName+"' limit 1),group_id=(select g.id from "+schema+".cc_group g where g.name='"+groupName+"' limit 1),if_connected=1 where id="+i;
-					} else {
-						sql5 = "update "+schema+"."+pgTableName+" set project_id=(select p.id from "+schema+".cc_project p where p.name='"+projectName+"' limit 1),group_id=(select g.id from "+schema+".cc_group g where g.name='"+groupName+"' limit 1),if_connected=0 where id="+i;
-					}
-					 
-					stmt2.execute(sql5);
-				}
+			//boolean isSuc = ssh2.executeCmd(cmd);
+			//Thread.sleep(10*1000);
+			/*if (isSuc) {
+				
 			}else{
 				System.err.println("操作话单表,csv文件拷贝失败");
+			}*/
+			stmt2.execute(sql2);
+			String sql3 = "select id from "+schema+"."+pgTableName+" order by id desc limit 1";
+			int id = 0;
+			rs2 = stmt2.executeQuery(sql3);
+			while (rs2.next()) {
+				id = rs2.getInt(1);
 			}
-			
+			String sql4 = "select (select p.name from projects p where p.id=project_id),(select ug.name from user_groups ug where ug.id=(select u.user_group_id from  users u where u.jobcode=agent_jobcode )),agent_connect_at  from "+mySqlTableName +" order by id";
+			rs3 = stmt1.executeQuery(sql4);
+			int i = id-count;
+			while (rs3.next()) {
+				i++;
+				String projectName = rs3.getString(1);
+				String groupName = rs3.getString(2);
+				Date agentConnectAt = rs3.getDate(3);
+				String sql5 = "";
+				if (null != agentConnectAt) {
+					sql5 = "update "+schema+"."+pgTableName+" set project_id=(select p.id from "+schema+".cc_project p where p.name='"+projectName+"' limit 1),group_id=(select g.id from "+schema+".cc_group g where g.name='"+groupName+"' limit 1),if_connected=1 where id="+i;
+				} else {
+					sql5 = "update "+schema+"."+pgTableName+" set project_id=(select p.id from "+schema+".cc_project p where p.name='"+projectName+"' limit 1),group_id=(select g.id from "+schema+".cc_group g where g.name='"+groupName+"' limit 1),if_connected=0 where id="+i;
+				}
+				 
+				stmt2.execute(sql5);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
