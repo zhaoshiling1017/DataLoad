@@ -254,7 +254,7 @@ public class DBUtil {
 		try {
 			conn1 = ds.getMysqlConn();
 			conn2 = ds.getPostgresConn();
-			String sql1 = "select p.name,p.mode,p.status,(select g.name from user_group g where g.id=p.user_group_id) as group_name,date_format(created_at,'%Y-%m-%d %H:%i:%s') created_at,date_format(updated_at,'%Y-%m-%d %H:%i:%s') updated_at,p.display_numbers, (select u.nickname from users u where u.id=p.owner_id) nickname,p.cps from projects p";
+			String sql1 = "select p.name,p.mode,p.status,(select g.name from user_groups g where g.id=p.user_group_id) as group_name,date_format(created_at,'%Y-%m-%d %H:%i:%s') created_at,date_format(updated_at,'%Y-%m-%d %H:%i:%s') updated_at,p.display_numbers, (select u.nickname from users u where u.id=p.owner_id) nickname,p.cps from projects p";
 			stmt1 = conn1.createStatement();
 			rs1 = stmt1.executeQuery(sql1);
 			while (rs1.next()) {
@@ -315,7 +315,7 @@ public class DBUtil {
 		try {
 			conn1 = ds.getMysqlConn();
 			conn2 = ds.getPostgresConn();
-			String sql1 = "select p.name,p.mode,p.status,(select g.name from user_group g where g.id=p.user_group_id) as group_name,date_format(created_at,'%Y-%m-%d %H:%i:%s') created_at,date_format(updated_at,'%Y-%m-%d %H:%i:%s') updated_at,p.display_numbers, (select u.nickname from users u where u.id=p.owner_id) nickname,p.cps from projects p";
+			String sql1 = "select p.name,p.mode,p.status,(select g.name from user_groups g where g.id=p.user_group_id) as group_name,date_format(created_at,'%Y-%m-%d %H:%i:%s') created_at,date_format(updated_at,'%Y-%m-%d %H:%i:%s') updated_at,p.display_numbers, (select u.nickname from users u where u.id=p.owner_id) nickname,p.cps from projects p";
 			stmt1 = conn1.createStatement();
 			rs1 = stmt1.executeQuery(sql1);
 			while (rs1.next()) {
@@ -383,7 +383,7 @@ public class DBUtil {
 				String nickname = rs1.getString(1);
 				String name = rs1.getString(2);
 				if (StringUtils.isNotBlank(name) && StringUtils.isNotBlank(nickname)) {
-					String sql2 = "insert into "+schema+".cc_user_group(id,users_id,groups_id) values(nextval('"+schema+".hibernate_sequence'),(select u.id from "+schema+".cc_user u where u.user_name = '"+nickname+"' limit 1),(select g.id from "+schema+".cc_group g where g.name='"+name+"' limit 1))";
+					String sql2 = "insert into "+schema+".cc_user_group(users_id,groups_id) values((select u.id from "+schema+".cc_user u where u.user_name = '"+nickname+"' limit 1),(select g.id from "+schema+".cc_group g where g.name='"+name+"' limit 1))";
 					stmt2 = conn2.createStatement();
 					stmt2.execute(sql2);
 				}
@@ -440,7 +440,7 @@ public class DBUtil {
 				String jobcode = rs.getString(3);
 				String did = rs.getString(4);
 				String created_at = rs.getString(5);
-				String sql2 = "insert into "+schema+".cc_user(id,user_name,name,staff_no,phone,created_at,if_verify,if_use,if_system) values(nextval('"+schema+".hibernate_sequence'),'"+nickname+"','"+name+"','"+jobcode+"','"+did+"','"+created_at+"::timestamp',0,1,0)";
+				String sql2 = "insert into "+schema+".cc_user(id,user_name,name,staff_no,phone,created_at,if_verify,if_use,if_system) values(nextval('"+schema+".hibernate_sequence'),'"+nickname+"','"+name+"','"+jobcode+"','"+did+"','"+created_at+"'::timestamp,0,1,0)";
 				stmt2 = conn2.createStatement();
 				stmt2.execute(sql2);
 			}
@@ -505,7 +505,7 @@ public class DBUtil {
 				String name = rs.getString(1);
 				String created_at = rs.getString(2);
 				String updated_at = rs.getString(3);
-				String sql2 = "insert into "+schema+".cc_group(id,name,created_at,updated_at,status) values(nextval('"+schema+".hibernate_sequence'),'"+name+"','"+created_at+"::timestamp','"+updated_at+"::timestamp',0)";
+				String sql2 = "insert into "+schema+".cc_group(id,name,created_at,updated_at,status) values(nextval('"+schema+".hibernate_sequence'),'"+name+"','"+created_at+"'::timestamp,'"+updated_at+"'::timestamp,0)";
 				stmt2 = conn2.createStatement();
 				stmt2.execute(sql2);
 			}
