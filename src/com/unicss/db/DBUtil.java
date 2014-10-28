@@ -45,15 +45,8 @@ public class DBUtil {
 		for(String tableName : tableNameList){
 			String pgTableName = "cc_call_record";
 			if(tableName.indexOf("_") != -1){
-				String dateStr = tableName.substring(tableName.indexOf("_")+1);
-				DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-				DateFormat df2 = new SimpleDateFormat("yyyyMMdd");
-				try {
-					java.util.Date date = df.parse(dateStr);
-					pgTableName = "cc_call_record_"+df2.format(date);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				String str = tableName.substring(tableName.indexOf("_")+1);
+				pgTableName = "cc_call_record_"+str.replace("_", "");
 			}
 			//判断是否存在指定的表,如果不存在创建一张表
 			checkTableExist(ds,schema,pgTableName,"cc_call_record");
@@ -122,20 +115,20 @@ public class DBUtil {
 			while (rs.next()) {
 				int count = rs.getInt(1);
 				if (count == 0) {
-					String sql2 = "CREATE SEQUENCE "+schema+"."+newTable+"_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;";
+					//String sql2 = "CREATE SEQUENCE "+schema+"."+newTable+"_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;";
 					String sql3 = "select * into "+schema+"."+newTable+" from "+schema+"."+oldTable+" where 1<>1;";
 					String sql4 = "ALTER TABLE "+schema+"."+newTable+" add primary KEY(id)";
-					String sql5 = "alter table "+schema+"."+newTable+" alter column id set default nextval('"+schema+"."+newTable+"_id_seq');";
+					String sql5 = "alter table "+schema+"."+newTable+" alter column id set default nextval('"+schema+".hibernate_sequence');";
 					String sql6 = " ALTER TABLE "+schema+"."+newTable+" ALTER COLUMN dnis TYPE varchar(255);";
 					String sql7 = "ALTER TABLE "+schema+"."+newTable+" OWNER TO "+schema+";";
-					String sql8 = "alter sequence "+schema+"."+newTable+"_id_seq owner to "+schema+";";
-					stmt.execute(sql2);
+					//String sql8 = "alter sequence "+schema+"."+newTable+"_id_seq owner to "+schema+";";
+					//stmt.execute(sql2);
 					stmt.execute(sql3);
 					stmt.execute(sql4);
 					stmt.execute(sql5);
 					stmt.execute(sql6);
 					stmt.execute(sql7);
-					stmt.execute(sql8);
+					//stmt.execute(sql8);
 				}
 				break;
 			}
@@ -186,6 +179,7 @@ public class DBUtil {
 			String cmd = "scp root@"+ds.getMysqlHost()+":"+path+mySqlTableName+".csv "+path;
 			stmt2 = conn2.createStatement();
 			boolean isSuc = ssh2.executeCmd(cmd);
+			Thread.sleep(10*1000);
 			if (isSuc) {
 				stmt2.execute(sql2);
 				String sql3 = "select id from "+schema+"."+pgTableName+" order by id desc limit 1";
@@ -194,7 +188,7 @@ public class DBUtil {
 				while (rs2.next()) {
 					id = rs2.getInt(1);
 				}
-				String sql4 = "select (select p.name from projects p where p.id=project_id),(select ug.name from user_group ug where ug.id=(select u.user_group_id from  users u where u.jobcode=agent_jobcode )),agent_connect_at  from "+mySqlTableName +" order by id";
+				String sql4 = "select (select p.name from projects p where p.id=project_id),(select ug.name from user_groups ug where ug.id=(select u.user_group_id from  users u where u.jobcode=agent_jobcode )),agent_connect_at  from "+mySqlTableName +" order by id";
 				rs3 = stmt1.executeQuery(sql4);
 				int i = id-count;
 				while (rs3.next()) {
@@ -438,6 +432,7 @@ public class DBUtil {
 			executeCsv(conn1,sql1);
 			String cmd = "scp root@"+ds.getMysqlHost()+":"+path+"users.csv "+path;
 			boolean isSuc = ssh2.executeCmd(cmd);
+			Thread.sleep(10*1000);
 			if (isSuc) {
 				executeCsv(conn2,sql2);
 			}else{
@@ -474,6 +469,7 @@ public class DBUtil {
 			executeCsv(conn1,sql1);
 			String cmd = "scp root@"+ds.getMysqlHost()+":"+path+"user_groups.csv "+path;
 			boolean isSuc = ssh2.executeCmd(cmd);
+			Thread.sleep(10*1000);
 			if (isSuc) {
 				executeCsv(conn2,sql2);
 			}else{
