@@ -3,6 +3,7 @@ package com.unicss.db;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -118,14 +119,14 @@ public class DBUtil {
 					//String sql2 = "CREATE SEQUENCE "+schema+"."+newTable+"_id_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;";
 					String sql3 = "select * into "+schema+"."+newTable+" from "+schema+"."+oldTable+" where 1<>1;";
 					String sql4 = "ALTER TABLE "+schema+"."+newTable+" add primary KEY(id)";
-					String sql5 = "alter table "+schema+"."+newTable+" alter column id set default nextval('"+schema+".hibernate_sequence');";
+					//String sql5 = "alter table "+schema+"."+newTable+" alter column id set default nextval('"+schema+".hibernate_sequence');";
 					String sql6 = " ALTER TABLE "+schema+"."+newTable+" ALTER COLUMN dnis TYPE varchar(255);";
 					String sql7 = "ALTER TABLE "+schema+"."+newTable+" OWNER TO "+schema+";";
 					//String sql8 = "alter sequence "+schema+"."+newTable+"_id_seq owner to "+schema+";";
 					//stmt.execute(sql2);
 					stmt.execute(sql3);
 					stmt.execute(sql4);
-					stmt.execute(sql5);
+					//stmt.execute(sql5);
 					stmt.execute(sql6);
 					stmt.execute(sql7);
 					//stmt.execute(sql8);
@@ -170,11 +171,11 @@ public class DBUtil {
 			while (rs1.next()) {
 				count = rs1.getInt(1);
 			}
-			String sql1 = "select ani,dnis, begin_at, connect_at,end_at,IF(agent_dn,agent_dn,null)," +
+			String sql1 = "select id, ani,dnis, begin_at, connect_at,end_at,IF(agent_dn,agent_dn,null)," +
 					"IF(agent_jobcode,agent_jobcode,null), agent_connect_at,record_file_name,direction,transfer_agent_at,call_id," +
 					"call_type,IF(tag,tag,null),created_at from "+mySqlTableName +" order by id into outfile '"+path+mySqlTableName+".csv' fields terminated by ',' lines terminated by '\r\n';" ;
 			stmt1.execute(sql1);
-			String sql2 = "copy "+schema+"."+pgTableName+"(ani,dnis,begin_at,connect_at,end_at,device_no,agent_job_code,agent_connect_at,file_path,call_direction,transfer_agent_at,call_id,call_type," +
+			String sql2 = "copy "+schema+"."+pgTableName+"(id,ani,dnis,begin_at,connect_at,end_at,device_no,agent_job_code,agent_connect_at,file_path,call_direction,transfer_agent_at,call_id,call_type," +
 					"tag,created_at) from '"+path+mySqlTableName+".csv' delimiter as ',';";
 			String cmd = "scp root@"+ds.getMysqlHost()+":"+path+mySqlTableName+".csv "+path;
 			stmt2 = conn2.createStatement();
@@ -265,7 +266,7 @@ public class DBUtil {
 				String nickname = rs1.getString(8);
 				int cps = rs1.getInt(9);
 				if (StringUtils.isNotBlank(name)) {
-					String sql3 = "insert into "+schema+".CC_PROJECT_PARAMS(project_id,phones,ratio,if_play_voice,if_transfer,created_at,operator_id,updated_at,answer_type,call_type,call_speed,if_continue,ring_time_out,concurrent_num) values((select p.id from "+schema+".CC_PROJECT p where p.name='"+name+"' limit 1),'"+displayNums+"',1,0,1,'"+createdAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1)," +
+					String sql3 = "insert into "+schema+".CC_PROJECT_PARAMS(id,project_id,phones,ratio,if_play_voice,if_transfer,created_at,operator_id,updated_at,answer_type,call_type,call_speed,if_continue,ring_time_out,concurrent_num) values(nextval('"+schema+".hibernate_sequence'),(select p.id from "+schema+".CC_PROJECT p where p.name='"+name+"' limit 1),'"+displayNums+"',1,0,1,'"+createdAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1)," +
 							"'"+updatedAt+"'::timestamp,'connect','capacity',"+cps+",1,20,1)";
 					stmt2 = conn2.createStatement();
 					stmt2.execute(sql3);
@@ -326,7 +327,7 @@ public class DBUtil {
 				String nickname = rs1.getString(8);
 				//System.out.println("name:"+name+",createdAt:"+createdAt);
 				if (StringUtils.isNotBlank(name)) {
-					String sql2 = "insert into "+schema+".CC_PROJECT(name,type,administrator,if_reply,created_at,creator_id,updated_at,operator_id,status,first_start_time,last_start_time) values('"+name+"','"+mode+"'," +
+					String sql2 = "insert into "+schema+".CC_PROJECT(id,name,type,administrator,if_reply,created_at,creator_id,updated_at,operator_id,status,first_start_time,last_start_time) values(nextval('"+schema+".hibernate_sequence'),'"+name+"','"+mode+"'," +
 							"(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1),"+0+",'"+createdAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1),'"+updatedAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name = '"+nickname+"' limit 1),'"+status+"','"+createdAt+"'::timestamp,now()::timestamp)";
 					stmt2 = conn2.createStatement();
 					stmt2.execute(sql2);
@@ -382,7 +383,7 @@ public class DBUtil {
 				String nickname = rs1.getString(1);
 				String name = rs1.getString(2);
 				if (StringUtils.isNotBlank(name) && StringUtils.isNotBlank(nickname)) {
-					String sql2 = "insert into "+schema+".cc_user_group(users_id,groups_id) values((select u.id from "+schema+".cc_user u where u.user_name = '"+nickname+"' limit 1),(select g.id from "+schema+".cc_group g where g.name='"+name+"' limit 1))";
+					String sql2 = "insert into "+schema+".cc_user_group(id,users_id,groups_id) values(nextval('"+schema+".hibernate_sequence'),(select u.id from "+schema+".cc_user u where u.user_name = '"+nickname+"' limit 1),(select g.id from "+schema+".cc_group g where g.name='"+name+"' limit 1))";
 					stmt2 = conn2.createStatement();
 					stmt2.execute(sql2);
 				}
@@ -424,10 +425,26 @@ public class DBUtil {
 	public static void opUserTable(DataSource ds,String schema,String path,SSH2Conn ssh2) {
 		Connection conn1 = null;
 		Connection conn2 = null;
+		Statement stmt1 = null;
+		Statement stmt2 = null;
+		ResultSet rs = null;
 		try {
 			conn1 = ds.getMysqlConn();
 			conn2 = ds.getPostgresConn();
-			String sql1 = "select nickname,name,jobcode,did,created_at,0,1,0 from users into outfile '"+path+"users.csv' fields terminated by ',' lines terminated by '\r\n';";
+			String sql1 = "select nickname,name,jobcode,did,date_format(created_at,'%Y-%m-%d %H:%i:%s') from users";
+			stmt1 = conn1.createStatement();
+			rs = stmt1.executeQuery(sql1);
+			while(rs.next()){
+				String nickname = rs.getString(1);
+				String name = rs.getString(2);
+				String jobcode = rs.getString(3);
+				String did = rs.getString(4);
+				String created_at = rs.getString(5);
+				String sql2 = "insert into "+schema+".cc_user(id,user_name,name,staff_no,phone,created_at,if_verify,if_use,if_system) values(nextval('"+schema+".hibernate_sequence'),'"+nickname+"','"+name+"','"+jobcode+"','"+did+"','"+created_at+"::timestamp',0,1,0)";
+				stmt2 = conn2.createStatement();
+				stmt2.execute(sql2);
+			}
+			/*String sql1 = "select nickname,name,jobcode,did,created_at,0,1,0 from users into outfile '"+path+"users.csv' fields terminated by ',' lines terminated by '\r\n';";
 			String sql2 = "copy "+schema+".cc_user(user_name,name,staff_no,phone,created_at,if_verify,if_use,if_system) from '"+path+"users.csv' delimiter as ',' ;";
 			executeCsv(conn1,sql1);
 			String cmd = "scp root@"+ds.getMysqlHost()+":"+path+"users.csv "+path;
@@ -437,10 +454,24 @@ public class DBUtil {
 				executeCsv(conn2,sql2);
 			}else{
 				System.err.println("操作用户表,csv文件拷贝失败");
-			}
+			}*/
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
+			if (null != stmt1) {
+				try {
+					stmt1.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			if (null != stmt2) {
+				try {
+					stmt2.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
 			if (null != conn1) {
 				try {
 					conn1.close();
@@ -461,23 +492,51 @@ public class DBUtil {
 	public static void opGroupTable(DataSource ds,String schema,String path,SSH2Conn ssh2) {
 		Connection conn1 = null;
 		Connection conn2 = null;
+		Statement stmt1 = null;
+		Statement stmt2 = null;
+		ResultSet rs = null;
 		try {
 			conn1 = ds.getMysqlConn();
 			conn2 = ds.getPostgresConn();
-			String sql1 = "select name,created_at,updated_at,0 from user_groups into outfile '"+path+"user_groups.csv' fields terminated by ',' lines terminated by '\r\n';";
-			String sql2 = "copy "+schema+".cc_group (name,created_at,updated_at,status) from '"+path+"user_groups.csv' delimiter as ',';";
-			executeCsv(conn1,sql1);
-			String cmd = "scp root@"+ds.getMysqlHost()+":"+path+"user_groups.csv "+path;
-			boolean isSuc = ssh2.executeCmd(cmd);
+			String sql1 = "select name,date_format(created_at,'%Y-%m-%d %H:%i:%s'),date_format(updated_at,'%Y-%m-%d %H:%i:%s') from user_groups";
+			stmt1 = conn1.createStatement();
+			rs = stmt1.executeQuery(sql1);
+			while(rs.next()){
+				String name = rs.getString(1);
+				String created_at = rs.getString(2);
+				String updated_at = rs.getString(3);
+				String sql2 = "insert into "+schema+".cc_group(id,name,created_at,updated_at,status) values(nextval('"+schema+".hibernate_sequence'),'"+name+"','"+created_at+"::timestamp','"+updated_at+"::timestamp',0)";
+				stmt2 = conn2.createStatement();
+				stmt2.execute(sql2);
+			}
+			//String sql1 = "select name,created_at,updated_at,0 from user_groups into outfile '"+path+"user_groups.csv' fields terminated by ',' lines terminated by '\r\n';";
+			//String sql2 = "copy "+schema+".cc_group (name,created_at,updated_at,status) from '"+path+"user_groups.csv' delimiter as ',';";
+			//executeCsv(conn1,sql1);
+			//String cmd = "scp root@"+ds.getMysqlHost()+":"+path+"user_groups.csv "+path;
+			/*boolean isSuc = ssh2.executeCmd(cmd);
 			Thread.sleep(10*1000);
 			if (isSuc) {
 				executeCsv(conn2,sql2);
 			}else{
 				System.err.println("操作用户组表,csv文件拷贝失败");
-			}
+			}*/
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
+			if (null != stmt1) {
+				try {
+					stmt1.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+			if (null != stmt2) {
+				try {
+					stmt2.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
 			if (null != conn1) {
 				try {
 					conn1.close();
@@ -492,6 +551,7 @@ public class DBUtil {
 					e.printStackTrace();
 				}
 			}
+			
 		}
 	}
 	//执行CSV文件
