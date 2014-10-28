@@ -1,9 +1,13 @@
 package com.unicss.ssh2;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.Session;
+import ch.ethz.ssh2.StreamGobbler;
 
 public class SSH2Conn {
 	private String hostname;
@@ -67,8 +71,7 @@ public class SSH2Conn {
 				System.out.println(line);
 			}*/
 			//得到脚本运行成功与否的标志 ：0－成功 非0－失败
-			System.out.println("ExitCode: " + sess.getExitStatus());
-			if (sess.getExitStatus() == 0) {
+			if (sess.getExitStatus() == null || sess.getExitStatus() == 0) {
 				isSuc = true;
 			}
 			sess.close();
@@ -79,5 +82,11 @@ public class SSH2Conn {
 			System.exit(2);
 		}
 		return isSuc;
+	}
+	public static void main(String[] args) {
+		SSH2Conn ssh2 = new SSH2Conn("192.168.1.231", "root", "bjiamcall");
+		String cmd = "scp root@192.168.1.229:/tmp/test.csv /tmp/";
+		boolean isSuc = ssh2.executeCmd(cmd);
+		System.out.println(isSuc);
 	}
 }
