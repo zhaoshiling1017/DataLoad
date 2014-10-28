@@ -6,6 +6,9 @@ import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +45,15 @@ public class DBUtil {
 		for(String tableName : tableNameList){
 			String pgTableName = "cc_call_record";
 			if(tableName.indexOf("_") != -1){
-				pgTableName = "cc_call_record"+tableName.substring(tableName.indexOf("_"));
+				String dateStr = tableName.substring(tableName.indexOf("_")+1);
+				DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+				DateFormat df2 = new SimpleDateFormat("yyyyMMdd");
+				try {
+					java.util.Date date = df.parse(dateStr);
+					pgTableName = "cc_call_record_"+df2.format(date);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 			//判断是否存在指定的表,如果不存在创建一张表
 			checkTableExist(ds,schema,pgTableName,"cc_call_record");
@@ -458,7 +469,7 @@ public class DBUtil {
 		try {
 			conn1 = ds.getMysqlConn();
 			conn2 = ds.getPostgresConn();
-			String sql1 = "select name,created_at,updated_at,status from user_groups into outfile '"+path+"user_groups.csv' fields terminated by ',' lines terminated by '\r\n';";
+			String sql1 = "select name,created_at,updated_at,0 from user_groups into outfile '"+path+"user_groups.csv' fields terminated by ',' lines terminated by '\r\n';";
 			String sql2 = "copy "+schema+".cc_group (name,created_at,updated_at,status) from '"+path+"user_groups.csv' delimiter as ',';";
 			executeCsv(conn1,sql1);
 			String cmd = "scp root@"+ds.getMysqlHost()+":"+path+"user_groups.csv "+path;
