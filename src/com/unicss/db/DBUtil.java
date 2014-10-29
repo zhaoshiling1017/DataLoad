@@ -281,7 +281,7 @@ public class DBUtil {
 					stmt2.execute(sql3);
 				}
 			}
-			String sql5 = "update "+schema+".CC_PROJECT_PARAMS set operatorId="+uId+" where operatorId is null";
+			String sql5 = "update "+schema+".CC_PROJECT_PARAMS set operator_id="+uId+" where operator_id is null";
 			stmt2.execute(sql5);
 		} catch (Exception e) {
 			e.printStackTrace();
