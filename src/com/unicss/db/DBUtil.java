@@ -337,7 +337,9 @@ public class DBUtil {
 			while(rs2.next()){
 				uId = rs2.getLong(1);
 			}
+			int i = 0;
 			while (rs1.next()) {
+				i++;
 				String name = rs1.getString(1);
 				String mode = rs1.getString(2);
 				String status = rs1.getString(3);
@@ -347,7 +349,7 @@ public class DBUtil {
 				//System.out.println("name:"+name+",createdAt:"+createdAt);
 				if (StringUtils.isNotBlank(name)) {
 					String sql2 = "insert into "+schema+".CC_PROJECT(id,name,type,administrator,if_reply,created_at,creator_id,updated_at,operator_id,status,first_start_time,last_start_time,if_use,if_delete,project_no) values(nextval('"+schema+".hibernate_sequence'),'"+name+"','"+mode+"'," +
-							"(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1),"+0+",'"+createdAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1),'"+updatedAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name = '"+nickname+"' limit 1),'"+status+"','"+createdAt+"'::timestamp,now()::timestamp,1,1,1)";
+							"(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1),"+0+",'"+createdAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1),'"+updatedAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name = '"+nickname+"' limit 1),'"+status+"','"+createdAt+"'::timestamp,now()::timestamp,1,1,"+i+")";
 					stmt2.execute(sql2);
 				}
 			}
