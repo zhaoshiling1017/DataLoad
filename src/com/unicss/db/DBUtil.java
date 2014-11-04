@@ -172,7 +172,7 @@ public class DBUtil {
 			}*/
 			String sql1 = "select id, ani,dnis, begin_at, connect_at,end_at,IF(agent_dn,agent_dn,null)," +
 					"IF(agent_jobcode,agent_jobcode,null), agent_connect_at,record_file_name,direction,transfer_agent_at,call_id," +
-					"call_type,IF(tag,tag,null),created_at from "+mySqlTableName +" order by id into outfile '"+path+mySqlTableName+".csv' fields terminated by ',' lines terminated by '\r\n';" ;
+					"'outbound_automation',IF(tag,tag,null),created_at from "+mySqlTableName +" order by id into outfile '"+path+mySqlTableName+".csv' fields terminated by ',' lines terminated by '\r\n';" ;
 			stmt1.execute(sql1);
 			String sql2 = "copy "+schema+"."+pgTableName+"(id,ani,dnis,begin_at,connect_at,end_at,device_no,agent_job_code,agent_connect_at,file_path,call_direction,transfer_agent_at,call_id,call_type," +
 					"tag,created_at) from '"+path+mySqlTableName+".csv' delimiter as ',';";
