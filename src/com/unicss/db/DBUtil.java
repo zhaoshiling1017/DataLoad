@@ -351,10 +351,13 @@ public class DBUtil {
 					String sql2 = "insert into "+schema+".CC_PROJECT(id,name,type,administrator,if_reply,created_at,creator_id,updated_at,operator_id,status,first_start_time,last_start_time,if_use,if_delete,project_no) values(nextval('"+schema+".hibernate_sequence'),'"+name+"','"+mode+"'," +
 							"(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1),"+0+",'"+createdAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1),'"+updatedAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name = '"+nickname+"' limit 1),'"+status+"','"+createdAt+"'::timestamp,now()::timestamp,1,1,"+i+")";
 					stmt2.execute(sql2);
+					String sql5 = "insert into "+schema+".CC_PROJECT_GROUP(id,project_id,group_id) values(nextval('"+schema+".hibernate_sequence'),(select id from "+schema+".CC_PROJECT where name='"+name+"' limit 1),(select id from "+schema+".CC_GROUP where name='"+name+"' limit 1))";
+					stmt2.execute(sql5);
 				}
 			}
 			String sql4 = "update "+schema+".CC_PROJECT set creator_id="+uId+",operator_id="+uId+",administrator="+uId+" where administrator is null";
 			stmt2.execute(sql4);
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
