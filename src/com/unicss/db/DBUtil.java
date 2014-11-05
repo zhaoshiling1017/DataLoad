@@ -355,12 +355,13 @@ public class DBUtil {
 					stmt2.execute(sql2);
 					String sql6 = "select id from "+schema+".CC_GROUP where name='"+name+"' limit 1";
 					rs3 = stmt2.executeQuery(sql6);
+					Long groupId = null;
 					while(rs3.next()){
-						Long groupId = rs3.getLong(1);
-						if(null != groupId){
-							String sql5 = "insert into "+schema+".CC_PROJECT_GROUP(id,project_id,group_id) values(nextval('"+schema+".hibernate_sequence'),(select id from "+schema+".CC_PROJECT where name='"+name+"' limit 1),"+groupId+")";
-							stmt2.execute(sql5);
-						}
+						groupId = rs3.getLong(1);
+					}
+					if(null != groupId){
+						String sql5 = "insert into "+schema+".CC_PROJECT_GROUP(id,project_id,group_id) values(nextval('"+schema+".hibernate_sequence'),(select id from "+schema+".CC_PROJECT where name='"+name+"' limit 1),"+groupId+")";
+						stmt2.execute(sql5);
 					}
 				}
 			}
