@@ -172,7 +172,7 @@ public class DBUtil {
 			}*/
 			String sql1 = "select id, ani,dnis, begin_at, connect_at,end_at,IF(agent_dn,agent_dn,null)," +
 					"IF(agent_jobcode,agent_jobcode,null), agent_connect_at,record_file_name,direction,transfer_agent_at,call_id," +
-					"'outbound_automation',IF(tag,tag,null),created_at from "+mySqlTableName +" order by id into outfile '"+path+mySqlTableName+".csv' fields terminated by ',' lines terminated by '\r\n';" ;
+					"'outbound_automation',IF(tag<>'',tag,null),created_at from "+mySqlTableName +" order by id into outfile '"+path+mySqlTableName+".csv' fields terminated by ',' lines terminated by '\r\n';" ;
 			stmt1.execute(sql1);
 			String sql2 = "copy "+schema+"."+pgTableName+"(id,ani,dnis,begin_at,connect_at,end_at,device_no,agent_job_code,agent_connect_at,file_path,call_direction,transfer_agent_at,call_id,call_type," +
 					"tag,created_at) from '"+path+mySqlTableName+".csv' delimiter as ',';";
@@ -192,7 +192,7 @@ public class DBUtil {
 			/*while (rs2.next()) {
 				id = rs2.getInt(1);
 			}*/
-			String sql4 = "select id,(select p.name from projects p where p.id=project_id),(select ug.name from user_groups ug where ug.id=(select u.user_group_id from  users u where u.jobcode=agent_jobcode )),date_format(agent_connect_at,'%Y-%m-%d %H:%i:%s'),date_format(end_at,'%Y-%m-%d %H:%i:%s')  from "+mySqlTableName +" order by id";
+			String sql4 = "select id,(select p.name from projects p where p.id=project_id),(select ug.name from user_groups ug where ug.id=(select u.user_group_id from  users u where u.jobcode=agent_jobcode )),date_format(agent_connect_at,'%Y-%m-%d %H:%i:%s'),date_format(end_at,'%Y-%m-%d %H:%i:%s'),agent_jobcode  from "+mySqlTableName +" order by id";
 			rs3 = stmt1.executeQuery(sql4);
 			//int i = id-count;
 			while (rs3.next()) {
@@ -202,12 +202,13 @@ public class DBUtil {
 				String groupName = rs3.getString(3);
 				String agentConnectAt = rs3.getString(4);
 				String endAt = rs3.getString(5);
+				String agentCode = rs3.getString(6);
 				String sql5 = "";
-				if (null != agentConnectAt && null != endAt) {
+				if (null != agentConnectAt && null != endAt && StringUtils.isNotBlank(agentCode)) {
 					Date end = df.parse(endAt);
 					Date connect = df.parse(agentConnectAt);
 					long s = end.getTime() - connect.getTime();
-					sql5 = "update "+schema+"."+pgTableName+" set project_id=(select p.id from "+schema+".cc_project p where p.name='"+projectName+"' limit 1),group_id=(select g.id from "+schema+".cc_group g where g.name='"+groupName+"' limit 1),if_connected=1,duration="+s+" where id="+id;
+					sql5 = "update "+schema+"."+pgTableName+" set project_id=(select p.id from "+schema+".cc_project p where p.name='"+projectName+"' limit 1),group_id=(select g.id from "+schema+".cc_group g where g.name='"+groupName+"' limit 1),if_connected=1,duration="+s+",agent_id=(select id from "+schema+".cc_user where staff_no="+agentCode+" limit 1) where id="+id;
 				} else {
 					sql5 = "update "+schema+"."+pgTableName+" set project_id=(select p.id from "+schema+".cc_project p where p.name='"+projectName+"' limit 1),group_id=(select g.id from "+schema+".cc_group g where g.name='"+groupName+"' limit 1),if_connected=0,duration=0 where id="+id;
 				}
@@ -324,12 +325,13 @@ public class DBUtil {
 		Statement stmt2 = null;
 		ResultSet rs1 = null;
 		ResultSet rs2 = null;
+		ResultSet rs3 = null;
 		try {
 			conn1 = ds.getMysqlConn();
 			conn2 = ds.getPostgresConn();
 			stmt1 = conn1.createStatement();
 			stmt2 = conn2.createStatement();
-			String sql1 = "select p.name,p.mode,p.status,(select g.name from user_groups g where g.id=p.user_group_id) as group_name,date_format(created_at,'%Y-%m-%d %H:%i:%s') created_at,date_format(updated_at,'%Y-%m-%d %H:%i:%s') updated_at,p.display_numbers, (select u.nickname from users u where u.id=p.owner_id) nickname,p.cps from projects p";
+			String sql1 = "select p.name,p.mode,if(p.status='stop','STOP','RUN'),(select g.name from user_groups g where g.id=p.user_group_id) as group_name,date_format(created_at,'%Y-%m-%d %H:%i:%s') created_at,date_format(updated_at,'%Y-%m-%d %H:%i:%s') updated_at,p.display_numbers, (select u.nickname from users u where u.id=p.owner_id) nickname,p.cps from projects p";
 			rs1 = stmt1.executeQuery(sql1);
 			String sql3 = "select id from "+schema+".cc_user where user_name='admin' limit 1";
 			rs2 = stmt2.executeQuery(sql3);
@@ -351,8 +353,15 @@ public class DBUtil {
 					String sql2 = "insert into "+schema+".CC_PROJECT(id,name,type,administrator,if_reply,created_at,creator_id,updated_at,operator_id,status,first_start_time,last_start_time,if_use,if_delete,project_no) values(nextval('"+schema+".hibernate_sequence'),'"+name+"','"+mode+"'," +
 							"(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1),"+0+",'"+createdAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name='"+nickname+"' limit 1),'"+updatedAt+"'::timestamp,(select u.id from "+schema+".cc_user u where u.user_name = '"+nickname+"' limit 1),'"+status+"','"+createdAt+"'::timestamp,now()::timestamp,1,1,"+i+")";
 					stmt2.execute(sql2);
-					String sql5 = "insert into "+schema+".CC_PROJECT_GROUP(id,project_id,group_id) values(nextval('"+schema+".hibernate_sequence'),(select id from "+schema+".CC_PROJECT where name='"+name+"' limit 1),(select id from "+schema+".CC_GROUP where name='"+name+"' limit 1))";
-					stmt2.execute(sql5);
+					String sql6 = "select id from "+schema+".CC_GROUP where name='"+name+"' limit 1";
+					rs3 = stmt2.executeQuery(sql6);
+					while(rs3.next()){
+						Long groupId = rs3.getLong(1);
+						if(null != groupId){
+							String sql5 = "insert into "+schema+".CC_PROJECT_GROUP(id,project_id,group_id) values(nextval('"+schema+".hibernate_sequence'),(select id from "+schema+".CC_PROJECT where name='"+name+"' limit 1),"+groupId+")";
+							stmt2.execute(sql5);
+						}
+					}
 				}
 			}
 			String sql4 = "update "+schema+".CC_PROJECT set creator_id="+uId+",operator_id="+uId+",administrator="+uId+" where administrator is null";
