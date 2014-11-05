@@ -208,7 +208,7 @@ public class DBUtil {
 					Date end = df.parse(endAt);
 					Date connect = df.parse(agentConnectAt);
 					long s = end.getTime() - connect.getTime();
-					sql5 = "update "+schema+"."+pgTableName+" set project_id=(select p.id from "+schema+".cc_project p where p.name='"+projectName+"' limit 1),group_id=(select g.id from "+schema+".cc_group g where g.name='"+groupName+"' limit 1),if_connected=1,duration="+s+",agent_id=(select id from "+schema+".cc_user where staff_no="+agentCode+" limit 1) where id="+id;
+					sql5 = "update "+schema+"."+pgTableName+" set project_id=(select p.id from "+schema+".cc_project p where p.name='"+projectName+"' limit 1),group_id=(select g.id from "+schema+".cc_group g where g.name='"+groupName+"' limit 1),if_connected=1,duration="+s+",agent_id=(select id from "+schema+".cc_user where staff_no='"+agentCode+"' limit 1) where id="+id;
 				} else {
 					sql5 = "update "+schema+"."+pgTableName+" set project_id=(select p.id from "+schema+".cc_project p where p.name='"+projectName+"' limit 1),group_id=(select g.id from "+schema+".cc_group g where g.name='"+groupName+"' limit 1),if_connected=0,duration=0 where id="+id;
 				}
