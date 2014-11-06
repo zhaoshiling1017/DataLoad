@@ -128,6 +128,9 @@ public class DBUtil {
 					stmt.execute(sql6);
 					stmt.execute(sql7);
 					//stmt.execute(sql8);
+				}else{
+					String sql2 = " ALTER TABLE "+schema+"."+newTable+" ALTER COLUMN dnis TYPE varchar(255);";
+					stmt.execute(sql2);
 				}
 				break;
 			}
@@ -170,6 +173,7 @@ public class DBUtil {
 			/*while (rs1.next()) {
 				count = rs1.getInt(1);
 			}*/
+			
 			String sql1 = "select id, ani,dnis, begin_at, connect_at,end_at,IF(agent_dn,agent_dn,null)," +
 					"IF(agent_jobcode,agent_jobcode,null), agent_connect_at,record_file_name,direction,transfer_agent_at,call_id," +
 					"'outbound_automation',IF(tag<>'',tag,null),created_at from "+mySqlTableName +" order by id into outfile '"+path+mySqlTableName+".csv' fields terminated by ',' lines terminated by '\r\n';" ;
