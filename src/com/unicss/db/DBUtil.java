@@ -24,6 +24,8 @@ import com.unicss.ssh2.SSH2Conn;
  */
 public class DBUtil {
 	public static void execute(DataSource ds,String schema,String path,SSH2Conn ssh2){
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		System.out.println("=============开始处理时间:"+df.format(new Date())+"===============");
 		//判断文件夹路径是否已斜杠结尾
 		if (null != path && !path.endsWith("/")) {
 			path = path + "/";
@@ -60,10 +62,11 @@ public class DBUtil {
 			//判断是否存在指定的表,如果不存在创建一张表
 			checkTableExist(ds,schema,pgTableName,"cc_call_record");
 			//操作话单表
-			System.out.println("========操作话单表"+pgTableName+"开始========");
+			System.out.println(df.format(new Date())+"========操作话单表"+pgTableName+"开始========");
 			opCallRecordTable(ds,schema,tableName,pgTableName, path,ssh2);
-			System.out.println("========操作话单表"+pgTableName+"结束========");
+			System.out.println(df.format(new Date())+"========操作话单表"+pgTableName+"结束========");
 		}
+		System.out.println("=============结束处理时间:"+df.format(new Date())+"===============");
 	}
 	//获取表名
 	public static List<String> getTableList(DataSource ds,String tableName) {
