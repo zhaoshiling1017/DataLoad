@@ -30,16 +30,26 @@ public class DBUtil {
 		}
 		//清除指定文件夹下csv文件
 		checkFileExist(path);
+		System.out.println("========操作用户组表开始========");
 		//操作用户组表
 		opGroupTable(ds,schema,path,ssh2);
+		System.out.println("========操作用户组表结束========");
+		System.out.println("========操作用户表开始========");
 		//操作用户表
 		opUserTable(ds,schema,path,ssh2);
+		System.out.println("========操作用户表结束========");
+		System.out.println("========关联用户组表和用户表开始========");
 		//关联用户组表和用户表
 		linkUserAndGroup(ds,schema);
+		System.out.println("========关联用户组表和用户表结束========");
+		System.out.println("========操作项目表开始========");
 		//操作项目表
 		opProjectTable(ds,schema);
+		System.out.println("========操作项目表结束========");
+		System.out.println("========操作项目参数表开始========");
 		//操作项目参数表
 		opProjectParamsTable(ds,schema);
+		System.out.println("========操作项目参数表结束========");
 		List<String> tableNameList = getTableList(ds,"callsheets");
 		for(String tableName : tableNameList){
 			String pgTableName = "cc_call_record";
@@ -50,7 +60,9 @@ public class DBUtil {
 			//判断是否存在指定的表,如果不存在创建一张表
 			checkTableExist(ds,schema,pgTableName,"cc_call_record");
 			//操作话单表
+			System.out.println("========操作话单表"+pgTableName+"开始========");
 			opCallRecordTable(ds,schema,tableName,pgTableName, path,ssh2);
+			System.out.println("========操作话单表"+pgTableName+"结束========");
 		}
 	}
 	//获取表名
@@ -108,7 +120,6 @@ public class DBUtil {
 		try {
 			conn = ds.getPostgresConn();
 			String sql1 = "select count(*) from information_schema.tables where table_schema='"+schema+"' and table_type='BASE TABLE' and table_name='"+newTable+"';";
-			System.out.println(sql1);
 			stmt = conn.createStatement();
 			rs = stmt.executeQuery(sql1);
 			while (rs.next()) {
