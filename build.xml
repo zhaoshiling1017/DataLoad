@@ -28,7 +28,7 @@
                     <exclude name="**/*.java"/>
                </fileset>         
           </copy> -->
-          <javac destdir="${dest}" debug="true" includeantruntime="yes"
+           <javac destdir="${dest}" debug="true" includeantruntime="yes"
                deprecation="false" optimize="false" failonerror="true">
                <src path="${src}"/>
                <classpath refid="classpath"/>

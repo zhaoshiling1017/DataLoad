@@ -3,7 +3,6 @@ package com.unicss.db;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
-import org.apache.commons.lang.StringUtils;
 
 
 /**

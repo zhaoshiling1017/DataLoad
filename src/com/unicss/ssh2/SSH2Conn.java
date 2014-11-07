@@ -1,13 +1,9 @@
 package com.unicss.ssh2;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.Session;
-import ch.ethz.ssh2.StreamGobbler;
 
 public class SSH2Conn {
 	private String hostname;

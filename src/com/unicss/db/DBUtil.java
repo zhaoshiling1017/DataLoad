@@ -10,11 +10,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
+import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
 
 import com.unicss.ssh2.SSH2Conn;
+import com.unicss.utils.MD5;
 
 
 /**
@@ -482,6 +483,7 @@ public class DBUtil {
 		Statement stmt2 = null;
 		ResultSet rs = null;
 		ResultSet rs2 = null;
+		MD5 md5 = new MD5();
 		try {
 			conn1 = ds.getMysqlConn();
 			conn2 = ds.getPostgresConn();
@@ -490,13 +492,16 @@ public class DBUtil {
 			String sql1 = "select nickname,name,jobcode,did,date_format(created_at,'%Y-%m-%d %H:%i:%s') from users";
 			rs = stmt1.executeQuery(sql1);
 			while(rs.next()){
+				String uuid = UUID.randomUUID().toString();
+				String pwdStr = "1a2b3c4d";
+				String pwd = md5.getMD5ofStr(pwdStr+uuid);
 				String nickname = rs.getString(1);
 				if(!nickname.equals("admin")){
 					String name = rs.getString(2);
 					String jobcode = rs.getString(3);
 					String did = rs.getString(4);
 					String created_at = rs.getString(5);
-					String sql2 = "insert into "+schema+".cc_user(id,user_name,name,staff_no,phone,created_at,if_verify,if_use,if_system) values(nextval('"+schema+".hibernate_sequence'),'"+nickname+"','"+name+"','"+jobcode+"','"+did+"','"+created_at+"'::timestamp,0,1,0)";
+					String sql2 = "insert into "+schema+".cc_user(id,user_name,name,staff_no,phone,created_at,if_verify,if_use,if_system,secret_key,password) values(nextval('"+schema+".hibernate_sequence'),'"+nickname+"','"+name+"','"+jobcode+"','"+did+"','"+created_at+"'::timestamp,0,1,0,'"+uuid+"','"+pwd+"')";
 					stmt2.execute(sql2);
 				}
 			}
